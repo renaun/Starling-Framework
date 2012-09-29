@@ -10,25 +10,24 @@
 
 package starling.core
 {
+    import flash.display.Bitmap;
     import flash.geom.Point;
     
     import starling.display.Image;
     import starling.display.Sprite;
+    import starling.embeds.TouchMarkerBitmap;
     import starling.textures.Texture;
     
     /** The TouchMarker is used internally to mark touches created through "simulateMultitouch". */
     internal class TouchMarker extends Sprite
-    {
-        [Embed(source="../../assets/touch_marker.png")]
-        private static var TouchMarkerBmp:Class;
-        
+    {        
         private var mCenter:Point;
         private var mTexture:Texture;
         
         public function TouchMarker()
         {
             mCenter = new Point();
-            mTexture = Texture.fromBitmap(new TouchMarkerBmp());
+            mTexture = Texture.fromBitmap(new Bitmap(new TouchMarkerBitmap()));
             
             for (var i:int=0; i<2; ++i)
             {
