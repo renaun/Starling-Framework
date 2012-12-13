@@ -11,7 +11,7 @@ package scenes
         public function CustomHitTestScene()
         {
             var description:String = 
-                "Pushing the egg only works when the touch occurs within a circle." + 
+                "Pushing the bird only works when the touch occurs within a circle." + 
                 "This can be accomplished by overriding the method 'hitTest'.";
             
             var infoText:TextField = new TextField(300, 100, description);
@@ -23,7 +23,7 @@ package scenes
             // 'RoundButton' is a helper class of the Demo, not a part of Starling!
             // Have a look at its code to understand this sample.
             
-            var button:RoundButton = new RoundButton(Assets.getTexture("StarlingRound"));
+            var button:RoundButton = new RoundButton(Game.assets.getTexture("starling_round"));
             button.x = Constants.CenterX - int(button.width / 2);
             button.y = 150;
             addChild(button);

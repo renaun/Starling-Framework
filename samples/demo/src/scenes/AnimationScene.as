@@ -21,11 +21,11 @@ package scenes
         
         public function AnimationScene()
         {
-            mTransitions = [Transitions.LINEAR, Transitions.EASE_OUT, Transitions.EASE_IN_OUT,
+            mTransitions = [Transitions.LINEAR, Transitions.EASE_IN_OUT,
                             Transitions.EASE_OUT_BACK, Transitions.EASE_OUT_BOUNCE,
                             Transitions.EASE_OUT_ELASTIC];
             
-            var buttonTexture:Texture = Assets.getTexture("ButtonNormal");
+            var buttonTexture:Texture = Game.assets.getTexture("button_normal");
             
             // create a button that starts the tween
             mStartButton = new Button(buttonTexture, "Start animation");
@@ -42,11 +42,11 @@ package scenes
             addChild(mDelayButton);
             
             // the Starling will be tweened
-            mEgg = new Image(Assets.getTexture("StarlingFront"));
+            mEgg = new Image(Game.assets.getTexture("starling_front"));
             addChild(mEgg);
             resetEgg();
             
-            mTransitionLabel = new TextField(320, 30, "");
+            mTransitionLabel = new TextField(320, 30, "", "Verdana", 20, 0, true);
             mTransitionLabel.y = mDelayButton.y + 40;
             mTransitionLabel.alpha = 0.0; // invisible, will be shown later
             addChild(mTransitionLabel);
@@ -60,7 +60,7 @@ package scenes
             mEgg.rotation = 0.0;
         }
         
-        private function onStartButtonTriggered(event:Event):void
+        private function onStartButtonTriggered():void
         {
             mStartButton.enabled = false;
             resetEgg();
@@ -72,7 +72,7 @@ package scenes
             // to animate any numeric property of an arbitrary object (not just display objects!), 
             // you can create a 'Tween'. One tween object animates one target for a certain time, 
             // a with certain transition function.
-            var tween:Tween = new Tween(mEgg, 3.5, transition);
+            var tween:Tween = new Tween(mEgg, 2.0, transition);
             
             // you can animate any property as long as it's numeric (int, uint, Number). 
             // it is animated from it's current value to a target value.  
@@ -92,12 +92,12 @@ package scenes
             mTransitionLabel.text = transition;
             mTransitionLabel.alpha = 1.0;
             
-            var hideTween:Tween = new Tween(mTransitionLabel, 3.0, Transitions.EASE_IN);
+            var hideTween:Tween = new Tween(mTransitionLabel, 2.0, Transitions.EASE_IN);
             hideTween.animate("alpha", 0.0);
             Starling.juggler.add(hideTween);
         }
         
-        private function onDelayButtonTriggered(event:Event):void
+        private function onDelayButtonTriggered():void
         {
             mDelayButton.enabled = false;
             
