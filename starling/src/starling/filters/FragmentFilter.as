@@ -22,6 +22,7 @@ package starling.filters
     import flash.geom.Matrix;
     import flash.geom.Rectangle;
     import flash.system.Capabilities;
+    import flash.utils.ByteArray;
     import flash.utils.getQualifiedClassName;
     
     import starling.core.RenderSupport;
@@ -463,19 +464,57 @@ package starling.filters
          *  STD_VERTEX_SHADER, respectively. */
         protected function assembleAgal(fragmentShader:String=null, vertexShader:String=null):Program3D
         {
-            if (fragmentShader == null) fragmentShader = STD_FRAGMENT_SHADER;
-            if (vertexShader   == null) vertexShader   = STD_VERTEX_SHADER;
-            
-            var vertexProgramAssembler:AGALMiniAssembler = new AGALMiniAssembler();
-            vertexProgramAssembler.assemble(Context3DProgramType.VERTEX, vertexShader);
-            
-            var fragmentProgramAssembler:AGALMiniAssembler = new AGALMiniAssembler();
-            fragmentProgramAssembler.assemble(Context3DProgramType.FRAGMENT, fragmentShader);
-            
-            var context:Context3D = Starling.context;
-            var program:Program3D = context.createProgram();
-            program.upload(vertexProgramAssembler.agalcode, fragmentProgramAssembler.agalcode);          
-            
+// RANDORI CHANGE
+/*
+	orig:
+			if (vertexShader   == null) vertexShader   = STD_VERTEX_SHADER;	
+	
+	changed:
+			if (vertexShader   == null) vertexShader   = 
+			"m44 op, va0, vc0 \n" + // 4x4 matrix transform to output space
+			"mov v0, va1      \n";
+			
+*/
+			if (Capabilities.playerType == "js")
+			{
+				var vertexShaderJS:Array = ["attribute vec2 va0;", 
+					"attribute vec2 va2;", 
+					"uniform mat4 vc1;", 
+					"varying vec2 v2;", 
+					"void main(void) {", 
+					"gl_Position = vc1 * vec4(va0, 1.0, 1.0);", 
+					"v2 = va2;", 
+					"}"];
+				var fragmentShaderJS:Array = ["precision mediump float;", 
+					"varying vec2 v2;", 
+					"uniform sampler2D fs0;",
+					"void main(void) {", 
+					"gl_FragColor = texture2D(fs0, vec2(v2.x, v2.y));", 
+					"}"];
+				
+				var context2:Context3D = Starling.context;
+				var program2:Program3D = context.createProgram();
+				program2.upload(vertexShaderJS as ByteArray, fragmentShaderJS as ByteArray); 
+			}
+			else
+			{
+				
+				if (fragmentShader == null) fragmentShader = STD_FRAGMENT_SHADER;
+				
+				if (vertexShader   == null) vertexShader   = 
+					"m44 op, va0, vc0 \n" + // 4x4 matrix transform to output space
+					"mov v0, va1      \n";
+	            
+	            var vertexProgramAssembler:AGALMiniAssembler = new AGALMiniAssembler();
+	            vertexProgramAssembler.assemble(Context3DProgramType.VERTEX, vertexShader);
+	            
+	            var fragmentProgramAssembler:AGALMiniAssembler = new AGALMiniAssembler();
+	            fragmentProgramAssembler.assemble(Context3DProgramType.FRAGMENT, fragmentShader);
+	            
+	            var context:Context3D = Starling.context;
+	            var program:Program3D = context.createProgram();
+	            program.upload(vertexProgramAssembler.agalcode, fragmentProgramAssembler.agalcode);          
+			}
             return program;
         }
         

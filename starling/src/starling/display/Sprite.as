@@ -58,7 +58,17 @@ package starling.display
         {
             if (mFlattenedContents)
             {
-                for (var i:int=0, max:int=mFlattenedContents.length; i<max; ++i)
+// RANDORI CHANGE: 
+/*
+	orig:
+				for (var i:int=0, max:int=mFlattenedContents.length; i<max; ++i)
+				
+	new:		
+				var max:int=mFlattenedContents.length;
+				for (var i:int=0; i<max; ++i)
+*/
+				var max:int=mFlattenedContents.length;
+				for (var i:int=0; i<max; ++i)
                     mFlattenedContents[i].dispose();
                 
                 mFlattenedContents = null;

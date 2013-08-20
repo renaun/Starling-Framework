@@ -123,8 +123,15 @@ package starling.display
                 
                 if (stage)
                 {
-                    var container:DisplayObjectContainer = child as DisplayObjectContainer;
-                    if (container) container.broadcastEventWith(Event.ADDED_TO_STAGE);
+// RANDORI CHANGES: This logic doesn't work, needed to change to "broadcastEventWith" in container					
+/*
+	orig:
+		if (container) container.broadcastEventWith(Event.ADDED_TO_STAGE);			
+	changed:
+		if (container && "broadcastEventWith" in container) container.broadcastEventWith(Event.ADDED_TO_STAGE);
+*/
+					var container:DisplayObjectContainer = child as DisplayObjectContainer;
+					if (container && "broadcastEventWith" in container) container.broadcastEventWith(Event.ADDED_TO_STAGE);
                     else           child.dispatchEventWith(Event.ADDED_TO_STAGE);
                 }
                 
@@ -156,8 +163,15 @@ package starling.display
                 
                 if (stage)
                 {
-                    var container:DisplayObjectContainer = child as DisplayObjectContainer;
-                    if (container) container.broadcastEventWith(Event.REMOVED_FROM_STAGE);
+// RANDORI CHANGES: This logic doesn't work, needed to change to "broadcastEventWith" in container					
+/*
+	orig:
+		if (container) container.broadcastEventWith(Event.REMOVED_FROM_STAGE);			
+	changed:
+		if (container && "broadcastEventWith" in container) container.broadcastEventWith(Event.REMOVED_FROM_STAGE);
+*/
+					var container:DisplayObjectContainer = child as DisplayObjectContainer;
+					if (container && "broadcastEventWith" in container) container.broadcastEventWith(Event.REMOVED_FROM_STAGE);
                     else           child.dispatchEventWith(Event.REMOVED_FROM_STAGE);
                 }
                 
@@ -381,8 +395,15 @@ package starling.display
             
             if (object.hasEventListener(eventType))
                 listeners.push(object);
-            
-            if (container)
+
+// RANDORI CHANGES: This logic doesn't work, needed to change to "broadcastEventWith" in container					
+/*
+	orig:
+		if (container)		
+	changed:
+		if (container && "mChildren" in container)
+*/			
+            if (container && "mChildren" in container)
             {
                 var children:Vector.<DisplayObject> = container.mChildren;
                 var numChildren:int = children.length;

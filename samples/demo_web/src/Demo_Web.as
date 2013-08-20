@@ -15,7 +15,8 @@ package
     [SWF(width="320", height="480", frameRate="60", backgroundColor="#222222")]
     public class Demo_Web extends Sprite
     {
-        [Embed(source = "/startup.jpg")]
+		[Factory(factoryClass="flash.utils.FlashEmbed.getEmbed",type="flash.display.Bitmap")]
+        [Embed(source = "../assets/startup.jpg")]
         private var Background:Class;
         
         private var mStarling:Starling;

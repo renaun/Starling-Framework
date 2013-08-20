@@ -25,6 +25,7 @@ package starling.core
     import flash.events.MouseEvent;
     import flash.events.TouchEvent;
     import flash.geom.Rectangle;
+    import flash.system.Capabilities;
     import flash.text.TextField;
     import flash.text.TextFieldAutoSize;
     import flash.text.TextFormat;
@@ -36,7 +37,7 @@ package starling.core
     import flash.utils.Dictionary;
     import flash.utils.getTimer;
     import flash.utils.setTimeout;
-    
+        
     import starling.animation.Juggler;
     import starling.display.DisplayObject;
     import starling.display.Stage;
@@ -258,13 +259,28 @@ package starling.core
                 {
                     // "Context3DProfile" is only available starting with Flash Player 11.4/AIR 3.4.
                     // to stay compatible with older versions, we check if the parameter is available.
-                    
-                    var requestContext3D:Function = mStage3D.requestContext3D;
-                    if (requestContext3D.length == 1) requestContext3D(renderMode);
-                    else requestContext3D(renderMode, profile);
+// RANDORI CHANGES: 
+/*
+	orig:
+		var requestContext3D:Function = mStage3D.requestContext3D;
+		if (requestContext3D.length == 1) requestContext3D(renderMode);
+		else requestContext3D(renderMode, profile);
+					
+	changed:
+		var requestContext3D:Function = mStage3D.requestContext3D;
+		if (requestContext3D.length == 1) requestContext3D.call(mStage3D, renderMode);
+		else requestContext3D.call(mStage3D, renderMode, profile);
+*/
+					
+					var requestContext3D:Function = mStage3D.requestContext3D;
+					if (requestContext3D.length == 1) requestContext3D.call(mStage3D, renderMode);
+					else requestContext3D.call(mStage3D, renderMode, profile);
+					
                 }
                 catch (e:Error)
                 {
+					if (Capabilities.playerType == "js")
+						showFatalError("Context3D error: " + e.stack);
                     showFatalError("Context3D error: " + e.message);
                 }
             }
@@ -363,6 +379,7 @@ package starling.core
          *  it is presented. This can be avoided by enabling <code>shareContext</code>.*/ 
         public function render():void
         {
+			trace("****RENDER STARLING*****");
             if (!contextValid)
                 return;
             
@@ -603,6 +620,7 @@ package starling.core
         /** Registers a vertex- and fragment-program under a certain name. */
         public function registerProgram(name:String, vertexProgram:ByteArray, fragmentProgram:ByteArray):void
         {
+			trace("Program: " + name);
             if (name in mPrograms)
                 throw new Error("Another program with this name is already registered");
             

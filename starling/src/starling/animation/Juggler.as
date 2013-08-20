@@ -212,7 +212,12 @@ package starling.animation
             remove(event.target as IAnimatable);
             
             var tween:Tween = event.target as Tween;
-            if (tween && tween.isComplete)
+// RANDORI CHANGES: need to handle as Tween
+/*
+	orig:
+	changes:
+*/
+            if (tween && tween.isComplete && "mNextTween" in tween)
                 add(tween.nextTween);
         }
         

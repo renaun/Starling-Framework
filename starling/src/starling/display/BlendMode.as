@@ -90,7 +90,8 @@ package starling.display
          *  value. Throws an ArgumentError if the mode does not exist. */
         public static function getBlendFactors(mode:String, premultipliedAlpha:Boolean=true):Array
         {
-            var modes:Object = sBlendFactors[int(premultipliedAlpha)];
+// RANDORI CHANGE: maybe change from int() to 0 +?
+            var modes:Object = sBlendFactors[(premultipliedAlpha) ? 1 : 0];
             if (mode in modes) return modes[mode];
             else throw new ArgumentError("Invalid blend mode");
         }

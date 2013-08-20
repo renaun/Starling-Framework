@@ -55,7 +55,7 @@ package
             {
                 var sceneTitle:String = sceneToCreate[0];
                 var sceneClass:Class  = sceneToCreate[1];
-                
+ // RANDORI ISSUE: using int() cast to round down causes issues               
                 var button:Button = new Button(buttonTexture, sceneTitle);
                 button.x = count % 2 == 0 ? 28 : 167;
                 button.y = 160 + int(count / 2) * 52;

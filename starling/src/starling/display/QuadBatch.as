@@ -21,6 +21,8 @@ package starling.display
     import flash.geom.Matrix;
     import flash.geom.Matrix3D;
     import flash.geom.Rectangle;
+    import flash.system.Capabilities;
+    import flash.utils.ByteArray;
     import flash.utils.Dictionary;
     import flash.utils.getQualifiedClassName;
     
@@ -215,7 +217,7 @@ package starling.display
             
             MatrixUtil.convertTo3D(mvpMatrix, sRenderMatrix);
             RenderSupport.setBlendFactors(pma, blendMode ? blendMode : this.blendMode);
-            
+
             context.setProgram(Starling.current.getProgram(programName));
             context.setProgramConstantsFromVector(Context3DProgramType.VERTEX, 0, sRenderAlpha, 1);
             context.setProgramConstantsFromMatrix(Context3DProgramType.VERTEX, 1, sRenderMatrix, true);
@@ -538,86 +540,206 @@ package starling.display
             // fs0 -> texture
             
             // Quad:
+			var options:Array;
+			
+			var smoothingTypes:Array = [
+				TextureSmoothing.NONE,
+				TextureSmoothing.BILINEAR,
+				TextureSmoothing.TRILINEAR
+			];
+			
+			var formats:Array = [
+				Context3DTextureFormat.BGRA,
+				Context3DTextureFormat.COMPRESSED,
+				"compressedAlpha" // use explicit string for compatibility
+			];
+            if (Capabilities.playerType == "js")
+			{
+				var vertexShaderQuad:Array = ["attribute vec2 va0;", 
+					"attribute float va1;", 
+					"uniform mat4 vc1;", 
+					"uniform vec4 vc0;", 
+					"varying vec2 v2;", 
+					"varying float v1;", 
+					"void main(void) {", 
+					"gl_Position = vc1 * vec4(va0, 1.0, 1.0);", 
+					"v1 = va1 * vc0.a;", "}"];
+				var fragmentShaderQuad:Array = ["precision mediump float;", 
+					"varying float v1;", 
+					"uniform sampler2D fs0;", 
+					"void main(void) {", 
+					"gl_FragColor = gl_FragColor * v1;", 
+					"}"];
+				
+				// TODO Tinting on the fragment shader is not implemented
+				var vertexShaderColor:Array = [	"attribute vec2 va0;",
+					"attribute vec2 va2;",
+					"attribute float va1;",
+					"uniform mat4 vc1;",
+					"uniform vec4 vc0;",
+					"varying vec2 v2;",
+					"varying float v1;",
+					"void main(void) {",
+					"gl_Position = vc1 * vec4(va0, 1.0, 1.0);",
+					"v2 = va2;",
+					"v1 = va1 * vc0.a;",
+					"}"];
+				
+				
+				var fragmentShaderColor:Array = [	"precision mediump float;",
+					"varying vec2 v2;",
+					"varying float v1;",
+					"uniform sampler2D fs0;",
+					"void main(void) {",
+					"gl_FragColor = texture2D(fs0, vec2(v2.x, v2.y));",
+					"gl_FragColor = gl_FragColor * v1;",
+					"}"];
+				
+				var vertexShader:Array = [	"attribute vec2 va0;",
+					"attribute vec2 va2;",
+					"uniform mat4 vc1;",
+					"varying vec2 v2;",
+					"void main(void) {",
+					"gl_Position = vc1 * vec4(va0, 1.0, 1.0);",
+					"v2 = va2;",
+					"}"];
+				
+				
+				var fragmentShader:Array = [	"precision mediump float;",
+					"varying vec2 v2;",
+					"uniform sampler2D fs0;",
+					"void main(void) {",
+					"gl_FragColor = texture2D(fs0, vec2(v2.x, v2.y));",
+					"}"];
+				target.registerProgram(QUAD_PROGRAM_NAME, vertexShaderQuad as ByteArray, fragmentShaderQuad as ByteArray);
+				
+				
+				
+				// Image:
+				// Each combination of tinted/repeat/mipmap/smoothing has its own fragment shader.
+				var vertexProgramJS:Array;
+				var fragmentProgramJS:Array;
+				for each (var tintedJS:Boolean in [true, false])
+				{
+					vertexProgramJS = tintedJS ?
+						vertexShaderColor
+						:
+						vertexShader;
+					
+					fragmentProgramJS = tintedJS ?
+						fragmentShaderColor
+						:
+						fragmentShader;
+					
+					
+					for each (var repeatJS:Boolean in [true, false])
+					{
+						for each (var mipmapJS:Boolean in [true, false])
+						{
+							for each (var smoothingJS:String in smoothingTypes)
+							{
+								for each (var formatJS:String in formats)
+								{
+									options = ["2d", repeatJS ? "repeat" : "clamp"];
+									
+									if (formatJS == Context3DTextureFormat.COMPRESSED)
+										options.push("dxt1");
+									else if (formatJS == "compressedAlpha")
+										options.push("dxt5");
+									
+									if (smoothingJS == TextureSmoothing.NONE)
+										options.push("nearest", mipmapJS ? "mipnearest" : "mipnone");
+									else if (smoothingJS == TextureSmoothing.BILINEAR)
+										options.push("linear", mipmapJS ? "mipnearest" : "mipnone");
+									else
+										options.push("linear", mipmapJS ? "miplinear" : "mipnone");
+									
+									trace(options);
+									target.registerProgram(
+										getImageProgramName(tintedJS, mipmapJS, repeatJS, formatJS, smoothingJS),
+										vertexProgramJS as ByteArray, fragmentProgramJS as ByteArray);
+								}
+							}
+						}
+					}
+				}
+				
+			}
+			else
+			{
+	            vertexProgramCode =
+	                "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
+	                "mul v0, va1, vc0 \n";  // multiply alpha (vc0) with color (va1)
+	            
+	            fragmentProgramCode =
+	                "mov oc, v0       \n";  // output color
+	            
+	            vertexProgramAssembler.assemble(Context3DProgramType.VERTEX, vertexProgramCode);
+	            fragmentProgramAssembler.assemble(Context3DProgramType.FRAGMENT, fragmentProgramCode);
+				
+				target.registerProgram(QUAD_PROGRAM_NAME,
+					vertexProgramAssembler.agalcode, fragmentProgramAssembler.agalcode);
+
+				
+				// Image:
+				// Each combination of tinted/repeat/mipmap/smoothing has its own fragment shader.
+				
+				for each (var tinted:Boolean in [true, false])
+				{
+					vertexProgramCode = tinted ?
+						"m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
+						"mul v0, va1, vc0 \n" + // multiply alpha (vc0) with color (va1)
+						"mov v1, va2      \n"   // pass texture coordinates to fragment program
+						:
+						"m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
+						"mov v1, va2      \n";  // pass texture coordinates to fragment program
+					
+					vertexProgramAssembler.assemble(Context3DProgramType.VERTEX, vertexProgramCode);
+					
+					fragmentProgramCode = tinted ?
+						"tex ft1,  v1, fs0 <???> \n" + // sample texture 0
+						"mul  oc, ft1,  v0       \n"   // multiply color with texel color
+						:
+						"tex  oc,  v1, fs0 <???> \n";  // sample texture 0
+					
+					
+					for each (var repeat:Boolean in [true, false])
+					{
+						for each (var mipmap:Boolean in [true, false])
+						{
+							for each (var smoothing:String in smoothingTypes)
+							{
+								for each (var format:String in formats)
+								{
+									options = ["2d", repeat ? "repeat" : "clamp"];
+									
+									if (format == Context3DTextureFormat.COMPRESSED)
+										options.push("dxt1");
+									else if (format == "compressedAlpha")
+										options.push("dxt5");
+									
+									if (smoothing == TextureSmoothing.NONE)
+										options.push("nearest", mipmap ? "mipnearest" : "mipnone");
+									else if (smoothing == TextureSmoothing.BILINEAR)
+										options.push("linear", mipmap ? "mipnearest" : "mipnone");
+									else
+										options.push("linear", mipmap ? "miplinear" : "mipnone");
+									
+									fragmentProgramAssembler.assemble(Context3DProgramType.FRAGMENT,
+										fragmentProgramCode.replace("???", options.join()));
+									trace(options);
+									trace("Shaders: " + vertexProgramAssembler.agalcode.length + " - " + fragmentProgramAssembler.agalcode.length);
+									target.registerProgram(
+										getImageProgramName(tinted, mipmap, repeat, format, smoothing),
+										vertexProgramAssembler.agalcode, fragmentProgramAssembler.agalcode);
+								}
+							}
+						}
+					}
+				}
+				
+			}
             
-            vertexProgramCode =
-                "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
-                "mul v0, va1, vc0 \n";  // multiply alpha (vc0) with color (va1)
-            
-            fragmentProgramCode =
-                "mov oc, v0       \n";  // output color
-            
-            vertexProgramAssembler.assemble(Context3DProgramType.VERTEX, vertexProgramCode);
-            fragmentProgramAssembler.assemble(Context3DProgramType.FRAGMENT, fragmentProgramCode);
-            
-            target.registerProgram(QUAD_PROGRAM_NAME,
-                vertexProgramAssembler.agalcode, fragmentProgramAssembler.agalcode);
-            
-            // Image:
-            // Each combination of tinted/repeat/mipmap/smoothing has its own fragment shader.
-            
-            for each (var tinted:Boolean in [true, false])
-            {
-                vertexProgramCode = tinted ?
-                    "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
-                    "mul v0, va1, vc0 \n" + // multiply alpha (vc0) with color (va1)
-                    "mov v1, va2      \n"   // pass texture coordinates to fragment program
-                  :
-                    "m44 op, va0, vc1 \n" + // 4x4 matrix transform to output clipspace
-                    "mov v1, va2      \n";  // pass texture coordinates to fragment program
-                    
-                vertexProgramAssembler.assemble(Context3DProgramType.VERTEX, vertexProgramCode);
-                
-                fragmentProgramCode = tinted ?
-                    "tex ft1,  v1, fs0 <???> \n" + // sample texture 0
-                    "mul  oc, ft1,  v0       \n"   // multiply color with texel color
-                  :
-                    "tex  oc,  v1, fs0 <???> \n";  // sample texture 0
-                
-                var smoothingTypes:Array = [
-                    TextureSmoothing.NONE,
-                    TextureSmoothing.BILINEAR,
-                    TextureSmoothing.TRILINEAR
-                ];
-                
-                var formats:Array = [
-                    Context3DTextureFormat.BGRA,
-                    Context3DTextureFormat.COMPRESSED,
-                    "compressedAlpha" // use explicit string for compatibility
-                ];
-                
-                for each (var repeat:Boolean in [true, false])
-                {
-                    for each (var mipmap:Boolean in [true, false])
-                    {
-                        for each (var smoothing:String in smoothingTypes)
-                        {
-                            for each (var format:String in formats)
-                            {
-                                var options:Array = ["2d", repeat ? "repeat" : "clamp"];
-                                
-                                if (format == Context3DTextureFormat.COMPRESSED)
-                                    options.push("dxt1");
-                                else if (format == "compressedAlpha")
-                                    options.push("dxt5");
-                                
-                                if (smoothing == TextureSmoothing.NONE)
-                                    options.push("nearest", mipmap ? "mipnearest" : "mipnone");
-                                else if (smoothing == TextureSmoothing.BILINEAR)
-                                    options.push("linear", mipmap ? "mipnearest" : "mipnone");
-                                else
-                                    options.push("linear", mipmap ? "miplinear" : "mipnone");
-                                
-                                fragmentProgramAssembler.assemble(Context3DProgramType.FRAGMENT,
-                                    fragmentProgramCode.replace("???", options.join()));
-                                
-                                target.registerProgram(
-                                    getImageProgramName(tinted, mipmap, repeat, format, smoothing),
-                                    vertexProgramAssembler.agalcode, fragmentProgramAssembler.agalcode);
-                            }
-                        }
-                    }
-                }
-            }
         }
         
         private static function getImageProgramName(tinted:Boolean, mipMap:Boolean=true, 

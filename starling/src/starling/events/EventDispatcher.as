@@ -104,8 +104,7 @@ package starling.events
             
             var previousTarget:EventDispatcher = event.target;
             event.setTarget(this);
-            
-            if (bubbles && this is DisplayObject) bubbleEvent(event);
+            if (bubbles) bubbleEvent(event);
             else                                  invokeEvent(event);
             
             if (previousTarget) event.setTarget(previousTarget);
@@ -133,7 +132,15 @@ package starling.events
                 {
                     var listener:Function = listeners[i] as Function;
                     var numArgs:int = listener.length;
-                    
+
+// RANDORI CHANGES HACK: figure out how many arguments the function/delegate has
+					var f:Function = listener;
+					while (f.hasOwnProperty("func"))
+					{
+						numArgs = (f["func"] as Function).length;
+						f = (f["func"] as Function);
+					}
+					
                     if (numArgs == 0) listener();
                     else if (numArgs == 1) listener(event);
                     else listener(event, event.data);

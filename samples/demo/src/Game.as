@@ -18,9 +18,6 @@ package
 
     public class Game extends Sprite
     {
-        // Embed the Ubuntu Font. Beware: the 'embedAsCFF'-part IS REQUIRED!!!
-        [Embed(source="../../demo/assets/fonts/Ubuntu-R.ttf", embedAsCFF="false", fontFamily="Ubuntu")]
-        private static const UbuntuRegular:Class;
         
         private var mLoadingProgress:ProgressBar;
         private var mMainMenu:MainMenu;
@@ -54,25 +51,30 @@ package
             mLoadingProgress.y = background.height * 0.7;
             addChild(mLoadingProgress);
             
-            assets.loadQueue(function(ratio:Number):void
-            {
-                mLoadingProgress.ratio = ratio;
-
-                // a progress bar should always show the 100% for a while,
-                // so we show the main menu only after a short delay. 
-                
-                if (ratio == 1)
-                    Starling.juggler.delayCall(function():void
-                    {
-                        mLoadingProgress.removeFromParent(true);
-                        mLoadingProgress = null;
-                        showMainMenu();
-                    }, 0.15);
-            });
+            assets.loadQueue(queueLoaded);
             
             addEventListener(Event.TRIGGERED, onButtonTriggered);
             stage.addEventListener(KeyboardEvent.KEY_DOWN, onKey);
         }
+		
+		public function queueLoaded(ratio:Number):void
+		{
+			mLoadingProgress.ratio = ratio;
+			
+			// a progress bar should always show the 100% for a while,
+			// so we show the main menu only after a short delay. 
+			
+			if (ratio == 1)
+			{
+				var that:Object = this;
+				Starling.juggler.delayCall(function():void
+				{
+					that.mLoadingProgress.removeFromParent(true);
+					that.mLoadingProgress = null;
+					that.showMainMenu();
+				}, 0.15);
+			}
+		}
         
         private function showMainMenu():void
         {

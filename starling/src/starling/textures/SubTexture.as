@@ -58,9 +58,16 @@ package starling.textures
         {
             mClipping = value;
             mRootClipping = value.clone();
-            
+			
+// RANDORI CHANGE: Another "as" class logic issue   
+/*
+	orig:
+		parentTexture
+	changes:
+		parentTexture && "parent" in parentTexture	
+*/            
             var parentTexture:SubTexture = mParent as SubTexture;
-            while (parentTexture)
+            while (parentTexture && "parent" in parentTexture)
             {
                 var parentClipping:Rectangle = parentTexture.mClipping;
                 mRootClipping.x = parentClipping.x + mRootClipping.x * parentClipping.width;

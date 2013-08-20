@@ -15,28 +15,31 @@ package
         
         // Texture Atlas
         
-        [Embed(source="/textures/1x/atlas.xml", mimeType="application/octet-stream")]
+		[Factory(factoryClass="flash.utils.FlashEmbed.getEmbed",type="XML")]
+        [Embed(source="../assets/textures/1x/atlas.xml", mimeType="application/octet-stream")]
         public static const atlas_xml:Class;
         
-        [Embed(source="/textures/1x/atlas.png")]
+		[Factory(factoryClass="flash.utils.FlashEmbed.getEmbed",type="flash.display.Bitmap")]
+        [Embed(source="../assets/textures/1x/atlas.png")]
         public static const atlas:Class;
 
         // Compressed textures
-        
-        [Embed(source = "/textures/1x/compressed_texture.atf", mimeType="application/octet-stream")]
+		[Factory(factoryClass="flash.utils.FlashEmbed.getEmbed",type="atf")]
+        [Embed(source = "../assets/textures/1x/compressed_texture.atf", mimeType="application/octet-stream")]
         public static const compressed_texture:Class;
         
         // Bitmap Fonts
-        
-        [Embed(source="/fonts/1x/desyrel.fnt", mimeType="application/octet-stream")]
+		[Factory(factoryClass="flash.utils.FlashEmbed.getEmbed",type="XML")]
+        [Embed(source="../assets/fonts/1x/desyrel.fnt", mimeType="application/octet-stream")]
         public static const desyrel_fnt:Class;
         
-        [Embed(source = "/fonts/1x/desyrel.png")]
+		[Factory(factoryClass="flash.utils.FlashEmbed.getEmbed",type="flash.display.Bitmap")]
+        [Embed(source = "../assets/fonts/1x/desyrel.png")]
         public static const desyrel:Class;
         
         // Sounds
-        
-        [Embed(source="/audio/wing_flap.mp3")]
+		[Factory(factoryClass="flash.utils.FlashEmbed.getEmbed",type="flash.media.Sound")]
+        [Embed(source="../assets/audio/wing_flap.mp3")]
         public static const wing_flap:Class;
     }
 }
