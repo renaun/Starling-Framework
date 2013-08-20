@@ -15,6 +15,8 @@ package tests
     import flexunit.framework.Assert;
     
     import org.flexunit.assertThat;
+    import org.flexunit.asserts.assertEquals;
+    import org.flexunit.asserts.assertFalse;
     import org.hamcrest.number.closeTo;
     
     import starling.display.MovieClip;
@@ -180,15 +182,16 @@ package tests
             
             Assert.assertFalse(movie.isComplete);
             movie.advanceTime(frameDuration);
+            Assert.assertEquals(0, movie.currentFrame);
+            Assert.assertEquals(0, completedCount);
+            movie.advanceTime(frameDuration);
             Assert.assertEquals(1, movie.currentFrame);
             Assert.assertEquals(0, completedCount);
             movie.advanceTime(frameDuration);
             Assert.assertEquals(2, movie.currentFrame);
             Assert.assertEquals(0, completedCount);
-            movie.advanceTime(frameDuration);
-            Assert.assertEquals(3, movie.currentFrame);
-            Assert.assertEquals(0, completedCount);
-            movie.advanceTime(frameDuration);
+            movie.advanceTime(frameDuration * 0.5);
+            movie.advanceTime(frameDuration * 0.5);
             Assert.assertEquals(3, movie.currentFrame);
             Assert.assertEquals(1, completedCount);
             Assert.assertTrue(movie.isComplete);
@@ -202,6 +205,9 @@ package tests
             
             Assert.assertFalse(movie.isComplete);
             movie.advanceTime(frameDuration);
+            Assert.assertEquals(0, movie.currentFrame);
+            Assert.assertEquals(0, completedCount);
+            movie.advanceTime(frameDuration);
             Assert.assertEquals(1, movie.currentFrame);
             Assert.assertEquals(0, completedCount);
             movie.advanceTime(frameDuration);
@@ -209,9 +215,6 @@ package tests
             Assert.assertEquals(0, completedCount);
             movie.advanceTime(frameDuration);
             Assert.assertEquals(3, movie.currentFrame);
-            Assert.assertEquals(0, completedCount);
-            movie.advanceTime(frameDuration);
-            Assert.assertEquals(0, movie.currentFrame);
             Assert.assertEquals(1, completedCount);
             movie.advanceTime(movie.numFrames * 2 * frameDuration);
             Assert.assertEquals(3, completedCount);
@@ -266,6 +269,65 @@ package tests
             }
             
             Assert.assertTrue(throwsError);
+        }
+        
+        [Test]
+        public function testLastTextureInFastPlayback():void
+        {
+            var fps:Number = 20.0;
+            var frames:Vector.<Texture> = createFrames(3);
+            var movie:MovieClip = new MovieClip(frames, fps);
+            movie.addEventListener(Event.COMPLETE, onMovieCompleted);
+            movie.advanceTime(1.0);
+            
+            function onMovieCompleted():void
+            {
+                Assert.assertEquals(frames[2], movie.texture);
+            }
+        }
+        
+        [Test]
+        public function testAssignedTextureWithCompleteHandler():void
+        {
+            // https://github.com/PrimaryFeather/Starling-Framework/issues/232
+            
+            var frames:Vector.<Texture> = createFrames(2);
+            var movie:MovieClip = new MovieClip(frames, 2);
+            
+            movie.addEventListener(Event.COMPLETE, onComplete);
+            assertEquals(frames[0], movie.texture);
+            
+            movie.advanceTime(0.5);
+            assertEquals(frames[0], movie.texture);
+            
+            movie.advanceTime(0.5);
+            assertEquals(frames[1], movie.texture);
+            
+            movie.advanceTime(0.5);
+            assertEquals(frames[0], movie.texture);
+            
+            function onComplete():void { /* does not have to do anything */ }
+        }
+        
+        [Test]
+        public function testStopMovieInCompleteHandler():void
+        {
+            var frames:Vector.<Texture> = createFrames(5);
+            var movie:MovieClip = new MovieClip(frames, 5);
+            
+            movie.addEventListener(Event.COMPLETE, onComplete);
+            movie.advanceTime(1.3);
+            
+            assertFalse(movie.isPlaying);
+            assertThat(movie.currentTime, closeTo(0.0, E));
+            assertEquals(frames[0], movie.texture);
+            
+            movie.play();
+            movie.advanceTime(0.3);
+            assertThat(movie.currentTime, closeTo(0.3, E));
+            assertEquals(frames[1], movie.texture);
+            
+            function onComplete():void { movie.stop(); }
         }
         
         private function createFrames(count:int):Vector.<Texture>

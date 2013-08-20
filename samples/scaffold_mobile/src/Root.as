@@ -1,12 +1,14 @@
 package
 {
+    import flash.system.System;
+    
     import starling.core.Starling;
     import starling.display.Image;
     import starling.display.Sprite;
     import starling.events.Event;
     import starling.textures.Texture;
+    import starling.utils.AssetManager;
     
-    import utils.AssetManager;
     import utils.ProgressBar;
 
     /** The Root class is the topmost display object in your game. It loads all the assets
@@ -63,6 +65,10 @@ package
                     {
                         progressBar.removeFromParent(true);
                         showScene(Menu);
+                        
+                        // now would be a good time for a clean-up 
+                        System.pauseForGCIfCollectionImminent(0);
+                        System.gc();
                     }, 0.15);
             });
         }

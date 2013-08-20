@@ -6,8 +6,7 @@ package
     import starling.core.Starling;
     import starling.events.Event;
     import starling.textures.Texture;
-    
-    import utils.AssetManager;
+    import starling.utils.AssetManager;
     
     // If you set this class as your 'default application', it will run without a preloader.
     // To use a preloader, see 'Demo_Web_Preloader.as'.
@@ -29,10 +28,8 @@ package
         
         private function start():void
         {
-            var isMac:Boolean = Capabilities.manufacturer.indexOf("Macintosh") != -1;
-            
-            Starling.multitouchEnabled = true;   // useful on mobile devices
-            Starling.handleLostContext = !isMac; // required on Windows, needs more memory
+            Starling.multitouchEnabled = true; // for Multitouch Scene
+            Starling.handleLostContext = true; // required on Windows, needs more memory
             
             mStarling = new Starling(Game, stage);
             mStarling.simulateMultitouch = true;
@@ -61,7 +58,7 @@ package
             assets.enqueue(EmbeddedAssets);
             
             // background texture is embedded, because we need it right away!
-            var bgTexture:Texture = Texture.fromBitmap(new Background());
+            var bgTexture:Texture = Texture.fromEmbeddedAsset(Background, false);
             
             // game will first load resources, then start menu
             game.start(bgTexture, assets);

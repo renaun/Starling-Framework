@@ -1,7 +1,68 @@
 Starling: Changelog
 ===================
 
-version 1.3 - 2012-12-12
+version 1.4 RC - 2013-08-19
+---------------------------
+
+- optimized rendering / buffer upload speed by using ByteArrays instead of Vectors in VertexData.
+  Heads-up: this changes the public interface - update your custom render methods!
+- added 'Sprite.clipRect' property for simple rectangular masking (thanks to Tim Conkling)
+- added 'DisplacementMapFilter'
+- added support for 'HiDPI' (i.e. retina MacBooks)
+- added support for RectangleTextures introduced in AIR 3.8
+- added support for updated ATF file format
+- added 'Texture.root.onRestore()' for manual texture restoration on context loss
+- added 'Texture.fromEmbeddedAsset()'
+- added 'TextField.autoSize' (thanks to Tim Conkling)
+- added 'AssetManager.enqueueWithName()' for custom naming of assets
+- added protected 'AssetManager.getName()' for custom naming rules in subclasses
+- added protected 'TextField.formatText()' for subclassing (thanks to Grant Mathews)
+- added support for generic XML, ByteArrays and JSON data to AssetManager
+- added 'Stage.drawToBitmapData()' method for game screenshots
+- added 'TextureAtlas.texture' property
+- added 'Tween.getEndValue()' (thanks to Josh Tynjala)
+- added 'Tween.getProgress()'
+- added 'Quad.premultipliedAlpha' (for consistency)
+- added 'AssetManager.checkPolicyFile'
+- added 'TextField.redraw()' method to force immediate drawing of contents
+- added 'DisplayObject.alignPivot()' for simple object alignment
+- added optional 'id' paramter to 'TouchEvent.getTouch()' method
+- added optional QuadBatch batching via 'QuadBatch.batchable'
+- added 'RenderSupport.getTextureLookupFlags()'
+- added 'Image.setTexCoordsTo()' method
+- added 'Texture.adjustTexCoords()' method
+- added support for all new Stage3D texture formats (including runtime compression on Desktop)
+- added support for custom TouchProcessors (thanks to Tim Conkling)
+- optimized hidden object allocations on iOS (thanks to Nisse Bryngfors & Adobe Scout)
+- optimized handling of texture recreation in case of a context loss (requires much less memory)
+- optimized broadcast of ENTER_FRAME event
+- optimized 'DisplayObject.transformationMatrix' calculations (thanks to Ville Koskela)
+- optimized usage of QuadBatches used during rendering (now trimming them)
+- optimized 'Button' by removing TextField when text is empty String
+- optimized 'DisplayObjectContainer.setChildIndex()' (thanks to Josh Tynjala)
+- updated filename / URL parsing of AssetManager to be more robust (thanks to peerobo)
+- updated Keyboard events: they are now broadcasted to all display objects
+- updated 'transporter_chief.rb' to use 'iOS-deploy' instead of 'fruitstrap'
+- updated the region a filter draws into (now limited to object bounds + margin)
+- updated bitmap font registration to be case insensitive
+- updated AssetManager to use texture file name as name for bitmap font
+- fixed multitouch support on devices with both mouse and touch screen
+- fixed that AssetManager sometimes never finished loading the queue
+- fixed 'MovieClip.totalTime' calculations to avoid floating point errors
+- fixed some problems with special cases within 'MovieClip.advanceTime()'
+- fixed layout of monospace bitmap fonts
+- fixed unwanted context3D-recreation in 'Starling.dispose()' (thanks to Sebastian Marketsmüller)
+- fixed various errors in VertexData (thanks to hamidhomatash)
+- fixed missing pivotX/Y-updates in 'DisplayObject.transformationMatrix' setter
+- fixed native TextField padding value
+- fixed that small filtered objects would cause frequent texture uploads
+- fixed that 'DisplayObjectContainer.sortChildren()' used an unstable sorting algorithm
+- fixed 'VertexData.getBounds()' for empty object
+- fixed recursion error when applying filter on flattened object
+- fixed dispatching of ADDED events when child was re-added to the same parent
+- fixed missing HOVER event after ended Touches (caused hand-cursor to appear only after movement)
+
+version 1.3 - 2013-01-14
 ------------------------
 
 - added FragmentFilter class for filter effects
@@ -35,10 +96,15 @@ version 1.3 - 2012-12-12
 - added arguments for mipmaps and scale to 'fromBitmap' method (thanks to elsassph)
 - added preloader to demo project
 - added scale parameter to 'Starling.showStatsAt'
+- added support for Event.MOUSE_LEAVE on native stage (thans to jamikado)
 - added support for Maven builds (thanks to bsideup)
+- added 'contextData' property on Starling instance
+- added 'RenderSupport.assembleAgal'
 - updated mobile scaffold and demo projects, now using the same startup class for Android & iOS
 - updated methods in 'Transitions' class to be protected
 - updated 'DisplayObject.hasVisibleArea' method to be public
+- updated MovieClip.fps setter for better performance (thanks to radamchin)
+- updated handling of shared context situations (now also supporting context loss)
 - removed embedded assets to avoid dependency on 'mx.core' library
 - fixed display list rendering when Starling is stopped (thanks to jamikado)
 - fixed 'DisplayObject.transformationMatrix' setter
@@ -48,6 +114,7 @@ version 1.3 - 2012-12-12
 - fixed bug when creating a SubTexture / calling 'Texture.fromTexture()' from a RenderTexture
 - fixed disruptive left-over touches on interruption of AIR app
 - fixed multiply blend mode for ATF textures
+- fixed error when juggler purge was triggered from advanceTime
 - fixed: bubble chain is now frozen when touch reaches phase "BEGAN"
 - fixed: now disposing children in reverse order
 - fixed: now forcing correct depth test and stencil settings

@@ -11,10 +11,10 @@ package
     import starling.core.Starling;
     import starling.events.Event;
     import starling.textures.Texture;
+    import starling.utils.AssetManager;
     import starling.utils.RectangleUtil;
+    import starling.utils.ScaleMode;
     import starling.utils.formatString;
-    
-    import utils.AssetManager;
     
     [SWF(width="320", height="480", frameRate="30", backgroundColor="#000000")]
     public class Demo_Mobile extends Sprite
@@ -24,7 +24,7 @@ package
         private static var Background:Class;
         
         // Startup image for HD screens
-        [Embed(source="../../demo/system/startup@2x.jpg")]
+        [Embed(source="../../demo/system/startupHD.jpg")]
         private static var BackgroundHD:Class;
         
         private var mStarling:Starling;
@@ -53,7 +53,8 @@ package
             
             var viewPort:Rectangle = RectangleUtil.fit(
                 new Rectangle(0, 0, stageWidth, stageHeight), 
-                new Rectangle(0, 0, stage.fullScreenWidth, stage.fullScreenHeight), true);
+                new Rectangle(0, 0, stage.fullScreenWidth, stage.fullScreenHeight), 
+                ScaleMode.SHOW_ALL, iOS);
             
             // create the AssetManager, which handles all required assets for this resolution
             
@@ -79,7 +80,8 @@ package
             // Note that we cannot embed "Default.png" (or its siblings), because any embedded
             // files will vanish from the application package, and those are picked up by the OS!
             
-            var background:Bitmap = scaleFactor == 1 ? new Background() : new BackgroundHD();
+            var backgroundClass:Class = scaleFactor == 1 ? Background : BackgroundHD;
+            var background:Bitmap = new backgroundClass();
             Background = BackgroundHD = null; // no longer needed!
             
             background.x = viewPort.x;
@@ -100,10 +102,11 @@ package
             mStarling.addEventListener(starling.events.Event.ROOT_CREATED, function():void
             {
                 removeChild(background);
+                background = null;
                 
                 var game:Game = mStarling.root as Game;
-                var bgTexture:Texture = Texture.fromBitmap(background, false, false, scaleFactor);
-                
+                var bgTexture:Texture = Texture.fromEmbeddedAsset(backgroundClass,
+                                                                  false, false, scaleFactor); 
                 game.start(bgTexture, assets);
                 mStarling.start();
             });

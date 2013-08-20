@@ -163,7 +163,7 @@ package starling.filters
             // vertex attribute 1:   texture coordinates (FLOAT_2)
             // texture 0:            input texture
             
-            updateParameters(pass, texture.width * texture.scale, texture.height * texture.scale);
+            updateParameters(pass, texture.nativeWidth, texture.nativeHeight);
             
             context.setProgramConstantsFromVector(Context3DProgramType.VERTEX,   4, mOffsets);
             context.setProgramConstantsFromVector(Context3DProgramType.FRAGMENT, 0, mWeights);
@@ -208,7 +208,7 @@ package starling.filters
             
             // get weights on the exact pixels (sTmpWeights) and calculate sums (mWeights)
             
-            for (var i:int=0; i<4; ++i)
+            for (var i:int=0; i<5; ++i)
                 sTmpWeights[i] = multiplier * Math.exp(-i*i / twoSigmaSq);
             
             mWeights[0] = sTmpWeights[0];
@@ -252,8 +252,8 @@ package starling.filters
             if (mBlurX == 0 && mBlurY == 0) mBlurX = 0.001;
             
             numPasses = Math.ceil(mBlurX) + Math.ceil(mBlurY);
-            marginX = 4 + Math.ceil(mBlurX);
-            marginY = 4 + Math.ceil(mBlurY); 
+            marginX = (3 + Math.ceil(mBlurX)) / resolution;
+            marginY = (3 + Math.ceil(mBlurY)) / resolution;
         }
         
         /** A uniform color will replace the RGB values of the input color, while the alpha

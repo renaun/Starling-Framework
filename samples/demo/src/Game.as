@@ -1,5 +1,6 @@
 package 
 {
+    import flash.system.System;
     import flash.ui.Keyboard;
     import flash.utils.getDefinitionByName;
     
@@ -12,8 +13,8 @@ package
     import starling.events.Event;
     import starling.events.KeyboardEvent;
     import starling.textures.Texture;
+    import starling.utils.AssetManager;
     
-    import utils.AssetManager;
     import utils.ProgressBar;
 
     public class Game extends Sprite
@@ -47,7 +48,6 @@ package
             
             mLoadingProgress = new ProgressBar(175, 20);
             mLoadingProgress.x = (background.width  - mLoadingProgress.width) / 2;
-            mLoadingProgress.y = (background.height - mLoadingProgress.height) / 2;
             mLoadingProgress.y = background.height * 0.7;
             addChild(mLoadingProgress);
             
@@ -78,6 +78,10 @@ package
         
         private function showMainMenu():void
         {
+            // now would be a good time for a clean-up 
+            System.pauseForGCIfCollectionImminent(0);
+            System.gc();
+            
             if (mMainMenu == null)
                 mMainMenu = new MainMenu();
             
