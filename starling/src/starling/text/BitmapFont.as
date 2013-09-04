@@ -10,14 +10,12 @@
 
 package starling.text
 {
-    import flash.display.Bitmap;
     import flash.geom.Rectangle;
     import flash.utils.Dictionary;
     
     import starling.display.Image;
     import starling.display.QuadBatch;
     import starling.display.Sprite;
-    import starling.embeds.MiniTextureBitmap;
     import starling.textures.Texture;
     import starling.textures.TextureSmoothing;
     import starling.utils.HAlign;

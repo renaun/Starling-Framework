@@ -577,19 +577,17 @@ package starling.display
             if (Capabilities.playerType == "js")
 			{
 				var vertexShaderQuad:Array = ["attribute vec2 va0;", 
-					"attribute float va1;", 
+					"attribute vec4 va1;", 
 					"uniform mat4 vc1;", 
 					"uniform vec4 vc0;", 
-					"varying vec2 v2;", 
-					"varying float v1;", 
+					"varying vec4 v1;", 
 					"void main(void) {", 
 					"gl_Position = vc1 * vec4(va0, 1.0, 1.0);", 
 					"v1 = va1 * vc0.a;", "}"];
 				var fragmentShaderQuad:Array = ["precision mediump float;", 
-					"varying float v1;", 
-					"uniform sampler2D fs0;", 
+					"varying vec4 v1;", 
 					"void main(void) {", 
-					"gl_FragColor = gl_FragColor * v1;", 
+					"gl_FragColor = vec4(v1);", 
 					"}"];
 				
 				// TODO Tinting on the fragment shader is not implemented
@@ -718,17 +716,6 @@ package starling.display
 						:
 						"tex  oc,  v1, fs0 <???> \n";  // sample texture 0
 					
-					var smoothingTypes:Array = [
-						TextureSmoothing.NONE,
-						TextureSmoothing.BILINEAR,
-						TextureSmoothing.TRILINEAR
-					];
-					
-					var formats:Array = [
-						Context3DTextureFormat.BGRA,
-						Context3DTextureFormat.COMPRESSED,
-						"compressedAlpha" // use explicit string for compatibility
-					];
 					
 					for each (var repeat:Boolean in [true, false])
 					{

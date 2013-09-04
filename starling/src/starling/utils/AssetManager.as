@@ -12,6 +12,7 @@ package starling.utils
     import flash.net.URLLoader;
     import flash.net.URLLoaderDataFormat;
     import flash.net.URLRequest;
+    import flash.system.Capabilities;
     import flash.system.ImageDecodingPolicy;
     import flash.system.LoaderContext;
     import flash.system.System;
@@ -387,7 +388,26 @@ package starling.utils
         {
             for each (var rawAsset:Object in rawAssets)
             {
-                if (rawAsset is Array)
+// RANDORI CHANGES:	Added checks for KontikiJS style embeds			
+				if (Capabilities.playerType == "js")
+				{
+					if (Array["isArray"](rawAsset))
+					{
+						enqueue.apply(this, rawAsset);
+					}
+					else if (rawAsset.className != undefined)
+					{
+						for (var key:String in rawAsset)
+						{
+							if (typeof rawAsset[key] == "function"
+								&& rawAsset[key].filename != undefined)
+							{
+								enqueueWithName(rawAsset[key], rawAsset[key].filename);
+							}
+						}
+					}
+					return;
+				} else if (rawAsset is Array)
                 {
                     enqueue.apply(this, rawAsset);
                 }
@@ -452,6 +472,14 @@ package starling.utils
             
             return name;
         }
+		
+		
+		// RANDORI CHANGES:	Remove anonmyous functions, compiler workaround
+		private var numElements:int;
+		private var currentRatio:Number = 0.0;
+		private var timeoutID:uint;
+		private var onProgress:Function;
+		private var xmls:Vector.<XML>;
         
         /** Loads all enqueued assets asynchronously. The 'onProgress' function will be called
          *  with a 'ratio' between '0.0' and '1.0', with '1.0' meaning that it's complete.
@@ -463,186 +491,123 @@ package starling.utils
             if (Starling.context == null)
                 throw new Error("The Starling instance needs to be ready before textures can be loaded.");
             
-            var xmls:Vector.<XML> = new <XML>[];
-            var numElements:int = mRawAssets.length;
-            var currentRatio:Number = 0.0;
-            var timeoutID:uint;
-            
+			xmls = new <XML>[];
+			numElements = mRawAssets.length;
+			currentRatio = 0;
+			this.onProgress = onProgress;
+			
             resume();
-            
-            function resume():void
-            {
-                currentRatio = mRawAssets.length ? 1.0 - (mRawAssets.length / numElements) : 1.0;
-                
-                if (mRawAssets.length)
-                    timeoutID = setTimeout(processNext, 1);
-                else
-                    processXmls();
-                
-                if (onProgress != null)
-                    onProgress(currentRatio);
-            }
-            
-            function processNext():void
-            {
-                var assetInfo:Object = mRawAssets.pop();
-                clearTimeout(timeoutID);
-                processRawAsset(assetInfo.name, assetInfo.asset, xmls, progress, resume);
-            }
-            
-            function processXmls():void
-            {
-                // xmls are processed seperately at the end, because the textures they reference
-                // have to be available for other XMLs. Texture atlases are processed first:
-                // that way, their textures can be referenced, too.
-                
-                xmls.sort(function(a:XML, b:XML):int { 
-                    return a.localName() == "TextureAtlas" ? -1 : 1; 
-                });
-                
-                for each (var xml:XML in xmls)
-                {
-                    var name:String;
-                    var rootNode:String = xml.localName();
-                    
-                    if (rootNode == "TextureAtlas")
-                    {
-                        name = getName(xml.@imagePath.toString());
-                        
-                        var atlasTexture:Texture = getTexture(name);
-                        addTextureAtlas(name, new TextureAtlas(atlasTexture, xml));
-                        removeTexture(name, false);
-                    }
-                    else if (rootNode == "font")
-                    {
-                        name = getName(xml.pages.page.@file.toString());
-                        log("Adding bitmap font '" + name + "'");
-                        
-                        var fontTexture:Texture = getTexture(name);
-                        TextField.registerBitmapFont(new BitmapFont(fontTexture, xml), name);
-                        removeTexture(name, false);
-                    }
-                    else
-                        throw new Error("XML contents not recognized: " + rootNode);
-                    
-                    System.disposeXML(xml);
-                }
-            }
-            
-            function progress(ratio:Number):void
-            {
-                onProgress(currentRatio + (1.0 / numElements) * Math.min(1.0, ratio) * 0.99);
-            }
         }
+		
+		
+		public function resume():void
+		{
+			currentRatio = mRawAssets.length ? 1.0 - (mRawAssets.length / numElements) : 1.0;
+			
+			if (mRawAssets.length)
+				timeoutID = setTimeout(processNext, 1);
+			else
+				processXmls();
+			
+			if (onProgress != null)
+				onProgress(currentRatio);
+		}
+		
+		public function processNext():void
+		{
+			var assetInfo:Object = mRawAssets.pop();
+			clearTimeout(timeoutID);
+			processRawAsset(assetInfo.name, assetInfo.asset, xmls, progress, resume);
+		}
+		
+		public function processXmls():void
+		{
+			// xmls are processed seperately at the end, because the textures they reference
+			// have to be available for other XMLs. Texture atlases are processed first:
+			// that way, their textures can be referenced, too.
+			
+			xmls.sort(function(a:XML, b:XML):int { 
+				return a.localName() == "TextureAtlas" ? -1 : 1; 
+			});
+			
+			for each (var xml:XML in xmls)
+			{
+				var name:String;
+				var rootNode:String = xml.localName();
+				
+				if (rootNode == "TextureAtlas")
+				{
+					name = getName(xml.@imagePath.toString());
+					
+					var atlasTexture:Texture = getTexture(name);
+					addTextureAtlas(name, new TextureAtlas(atlasTexture, xml));
+					removeTexture(name, false);
+				}
+				else if (rootNode == "font")
+				{
+					name = getName(xml.pages.page.@file.toString());
+					log("Adding bitmap font '" + name + "'");
+					
+					var fontTexture:Texture = getTexture(name);
+					TextField.registerBitmapFont(new BitmapFont(fontTexture, xml), name);
+					removeTexture(name, false);
+				}
+				else
+					throw new Error("XML contents not recognized: " + rootNode);
+				
+				System.disposeXML(xml);
+			}
+		}
+		
+		public function progress(ratio:Number):void
+		{
+			onProgress(currentRatio + (1.0 / numElements) * Math.min(1.0, ratio) * 0.99);
+		}
         
+		
+		
+		private var assetName:String;
+		private var onComplete:Function;
+		private var extension:String = null;
         private function processRawAsset(name:String, rawAsset:Object, xmls:Vector.<XML>,
                                          onProgress:Function, onComplete:Function):void
         {
+			this.assetName = name;
+			this.onComplete = onComplete;
+			extension = null;
             loadRawAsset(name, rawAsset, onProgress, process); 
             
-            function process(asset:Object):void
-            {
-                var texture:Texture;
-                var bytes:ByteArray;
-                
-                if (asset is Sound)
-                {
-                    addSound(name, asset as Sound);
-                    onComplete();
-                }
-                else if (asset is Bitmap)
-                {
-                    texture = Texture.fromBitmap(asset as Bitmap, mUseMipMaps, false, mScaleFactor);
-                    texture.root.onRestore = function():void
-                    {
-                        loadRawAsset(name, rawAsset, null, function(asset:Object):void
-                        {
-                            try { texture.root.uploadBitmap(asset as Bitmap); }
-                            catch (e:Error) { log("Texture restoration failed: " + e.message); }
-                            
-                            asset.bitmapData.dispose();
-                        });
-                    };
-
-                    asset.bitmapData.dispose();
-                    addTexture(name, texture);
-                    onComplete();
-                }
-                else if (asset is ByteArray)
-                {
-                    bytes = asset as ByteArray;
-                    
-                    if (AtfData.isAtfData(bytes))
-                    {
-                        texture = Texture.fromAtfData(bytes, mScaleFactor, mUseMipMaps, onComplete);
-                        texture.root.onRestore = function():void
-                        {
-                            loadRawAsset(name, rawAsset, null, function(asset:Object):void
-                            {
-                                try { texture.root.uploadAtfData(asset as ByteArray, 0, true); }
-                                catch (e:Error) { log("Texture restoration failed: " + e.message); }
-                                
-                                asset.clear();
-                            });
-                        };
-                        
-                        bytes.clear();
-                        addTexture(name, texture);
-                    }
-                    else if (byteArrayStartsWith(bytes, "{") || byteArrayStartsWith(bytes, "["))
-                    {
-                        addObject(name, JSON.parse(bytes.readUTFBytes(bytes.length)));
-                        bytes.clear();
-                        onComplete();
-                    }
-                    else if (byteArrayStartsWith(bytes, "<"))
-                    {
-                        process(new XML(bytes));
-                        bytes.clear();
-                    }
-                    else
-                    {
-                        addByteArray(name, bytes);
-                        onComplete();
-                    }
-                }
-                else if (asset is XML)
-                {
-                    var xml:XML = asset as XML;
-                    var rootNode:String = xml.localName();
-                    
-                    if (rootNode == "TextureAtlas" || rootNode == "font")
-                        xmls.push(xml);
-                    else
-                        addXml(name, xml);
-                    
-                    onComplete();
-                }
-                else if (asset == null)
-                {
-                    onComplete();
-                }
-                else
-                {
-                    log("Ignoring unsupported asset type: " + getQualifiedClassName(asset));
-                    onComplete();
-                }
-                
-                // avoid that objects stay in memory (through 'onRestore' functions)
-                asset = null;
-                bytes = null;
-            }
+            
         }
-        
+		
         private function loadRawAsset(name:String, rawAsset:Object, 
                                       onProgress:Function, onComplete:Function):void
         {
             var extension:String = null;
             var urlLoader:URLLoader = null;
-            
-            if (rawAsset is Class)
+// RANDORI CHANGES: Handle JS Embed Classes differently
+			var asset:Object;
+			if ("filename" in rawAsset)
+			{
+				asset = new rawAsset();
+				if (rawAsset.classType == "flash.media.Sound")
+				{
+					addSound(assetName, asset as Sound);
+				}
+				else if (rawAsset.classType == "flash.display.Bitmap")
+				{
+					var bitmapJS:Bitmap = new Bitmap((asset as Object).bitmapData, "auto", false); 
+					addTexture(assetName, Texture.fromBitmap(bitmapJS, mUseMipMaps, false, mScaleFactor));
+				}
+				else if (rawAsset.classType == "XML")
+				{
+					xmls.push(asset as XML);
+				}
+				onComplete();
+			}
+			else if (rawAsset is Class)
             {
-                onComplete(new rawAsset());
+                onComplete(new rawAsset(), rawAsset);
             }
             else if (rawAsset is String)
             {
@@ -656,60 +621,157 @@ package starling.utils
                 urlLoader.addEventListener(Event.COMPLETE, onUrlLoaderComplete);
                 urlLoader.load(new URLRequest(url));
             }
-            
-            function onIoError(event:IOErrorEvent):void
-            {
-                log("IO error: " + event.text);
-                onComplete(null);
-            }
-            
-            function onLoadProgress(event:ProgressEvent):void
-            {
-                if (onProgress != null)
-                    onProgress(event.bytesLoaded / event.bytesTotal);
-            }
-            
-            function onUrlLoaderComplete(event:Event):void
-            {
-                var bytes:ByteArray = urlLoader.data as ByteArray;
-                var sound:Sound;
-                
-                urlLoader.removeEventListener(IOErrorEvent.IO_ERROR, onIoError);
-                urlLoader.removeEventListener(ProgressEvent.PROGRESS, onLoadProgress);
-                urlLoader.removeEventListener(Event.COMPLETE, onUrlLoaderComplete);
-                
-                switch (extension)
-                {
-                    case "atf":
-                    case "fnt":
-                    case "json":
-                    case "pex":
-                    case "xml":
-                        onComplete(bytes);
-                        break;
-                    case "mp3":
-                        sound = new Sound();
-                        sound.loadCompressedDataFromByteArray(bytes, bytes.length);
-                        bytes.clear();
-                        onComplete(sound);
-                        break;
-                    default:
-                        var loaderContext:LoaderContext = new LoaderContext(mCheckPolicyFile);
-                        var loader:Loader = new Loader();
-                        loaderContext.imageDecodingPolicy = ImageDecodingPolicy.ON_LOAD;
-                        loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoaderComplete);
-                        loader.loadBytes(bytes, loaderContext);
-                        break;
-                }
-            }
-            
-            function onLoaderComplete(event:Event):void
-            {
-                urlLoader.data.clear();
-                event.target.removeEventListener(Event.COMPLETE, onLoaderComplete);
-                onComplete(event.target.content);
-            }
         }
+		
+		
+		
+		public function onIoError(event:IOErrorEvent):void
+		{
+			log("IO error: " + event.text);
+			onComplete(null);
+		}
+		
+		public function onLoadProgress(event:ProgressEvent):void
+		{
+			if (onProgress != null)
+				onProgress(event.bytesLoaded / event.bytesTotal);
+		}
+		
+		public function onUrlLoaderComplete(event:Event):void
+		{
+			var urlLoader:URLLoader = event.target as URLLoader;
+			var bytes:ByteArray = urlLoader.data as ByteArray;
+			var sound:Sound;
+			
+			urlLoader.removeEventListener(IOErrorEvent.IO_ERROR, onIoError);
+			urlLoader.removeEventListener(ProgressEvent.PROGRESS, onLoadProgress);
+			urlLoader.removeEventListener(Event.COMPLETE, onUrlLoaderComplete);
+			
+			switch (extension)
+			{
+				case "atf":
+				case "fnt":
+				case "json":
+				case "pex":
+				case "xml":
+					onComplete(bytes);
+					break;
+				case "mp3":
+					sound = new Sound();
+					sound.loadCompressedDataFromByteArray(bytes, bytes.length);
+					bytes.clear();
+					onComplete(sound);
+					break;
+				default:
+					var loaderContext:LoaderContext = new LoaderContext(mCheckPolicyFile);
+					var loader:Loader = new Loader();
+					loaderContext.imageDecodingPolicy = ImageDecodingPolicy.ON_LOAD;
+					loader.contentLoaderInfo.addEventListener(Event.COMPLETE, onLoaderComplete);
+					loader.loadBytes(bytes, loaderContext);
+					break;
+			}
+		}
+		public function process(asset:Object, rawAsset:Class):void
+		{
+			var texture:Texture;
+			var bytes:ByteArray;
+			
+// RANDORI CHANGE: Check for null first so it it wont error out on XML
+			if (asset == null)
+			{
+				onComplete();
+			} 
+			else if (asset is Sound)
+			{
+				addSound(assetName, asset as Sound);
+				onComplete();
+			}
+			else if (asset is Bitmap)
+			{
+				texture = Texture.fromBitmap(asset as Bitmap, mUseMipMaps, false, mScaleFactor);
+				texture.root.onRestore = function():void
+				{
+					loadRawAsset(assetName, rawAsset, null, function(asset:Object):void
+					{
+						try { texture.root.uploadBitmap(asset as Bitmap); }
+						catch (e:Error) { log("Texture restoration failed: " + e.message); }
+						
+						asset.bitmapData.dispose();
+					});
+				};
+				
+				asset.bitmapData.dispose();
+				addTexture(assetName, texture);
+				onComplete();
+			}
+			else if (asset is ByteArray)
+			{
+				bytes = asset as ByteArray;
+				
+				if (AtfData.isAtfData(bytes))
+				{
+					texture = Texture.fromAtfData(bytes, mScaleFactor, mUseMipMaps, onComplete);
+					texture.root.onRestore = function():void
+					{
+						loadRawAsset(assetName, rawAsset, null, function(asset:Object):void
+						{
+							try { texture.root.uploadAtfData(asset as ByteArray, 0, true); }
+							catch (e:Error) { log("Texture restoration failed: " + e.message); }
+							
+							asset.clear();
+						});
+					};
+					
+					bytes.clear();
+					addTexture(assetName, texture);
+				}
+				else if (byteArrayStartsWith(bytes, "{") || byteArrayStartsWith(bytes, "["))
+				{
+					addObject(assetName, JSON.parse(bytes.readUTFBytes(bytes.length)));
+					bytes.clear();
+					onComplete();
+				}
+				else if (byteArrayStartsWith(bytes, "<"))
+				{
+					process(new XML(bytes), rawAsset);
+					bytes.clear();
+				}
+				else
+				{
+					addByteArray(assetName, bytes);
+					onComplete();
+				}
+			}
+			else if (asset is XML)
+			{
+				var xml:XML = asset as XML;
+				var rootNode:String = xml.localName();
+				
+				if (rootNode == "TextureAtlas" || rootNode == "font")
+					xmls.push(xml);
+				else
+					addXml(assetName, xml);
+				
+				onComplete();
+			}
+			else
+			{
+				log("Ignoring unsupported asset type: " + getQualifiedClassName(asset));
+				onComplete();
+			}
+			
+			// avoid that objects stay in memory (through 'onRestore' functions)
+			asset = null;
+			bytes = null;
+		}
+		
+		public function onLoaderComplete(event:Event):void
+		{
+			var urlLoader:URLLoader = event.target as URLLoader;
+			urlLoader.data.clear();
+			event.target.removeEventListener(Event.COMPLETE, onLoaderComplete);
+			onComplete(event.target.content);
+		}
         
         // helpers
         
@@ -721,10 +783,10 @@ package starling.utils
         {
             var matches:Array;
             var name:String;
-            
-            if (rawAsset is String || rawAsset is FileReference)
+            var isString:Boolean = (rawAsset is String) || (Capabilities.playerType == "js" && typeof rawAsset == "string");
+            if (isString || rawAsset is FileReference)
             {
-                name = rawAsset is String ? rawAsset as String : (rawAsset as FileReference).name;
+                name = isString ? rawAsset as String : (rawAsset as FileReference).name;
                 name = name.replace(/%20/g, " "); // URLs use '%20' for spaces
                 matches = /(.*[\\\/])?(.+)(\.[\w]{1,4})/.exec(name);
                 

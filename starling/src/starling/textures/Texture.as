@@ -144,8 +144,16 @@ package starling.textures
         {
             var texture:Texture;
             var asset:Object = new assetClass();
-            
-            if (asset is Bitmap)
+
+// RANDORI CHANGE
+/*
+		orig: asset is Bitmap
+			
+		change: asset is Bitmap || assetClass.classType == "flash.display.Bitmap"
+				
+*/
+            if (asset is Bitmap
+				|| assetClass.classType == "flash.display.Bitmap")
             {
                 texture = Texture.fromBitmap(asset as Bitmap, mipMapping, false, scale, format);
                 texture.root.onRestore = function():void

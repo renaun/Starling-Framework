@@ -17,7 +17,6 @@ package starling.events
     import starling.core.Starling;
     import starling.display.Image;
     import starling.display.Sprite;
-    import starling.embeds.TouchMarkerBitmap;
     import starling.textures.Texture;
     
     /** The TouchMarker is used internally to mark touches created through "simulateMultitouch". */

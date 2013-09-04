@@ -512,8 +512,8 @@ package starling.filters
 					"gl_FragColor = texture2D(fs0, vec2(v2.x, v2.y));", 
 					"}"];
 				
-				var context2:Context3D = Starling.context;
-				var program:Program3D = context.createProgram();
+				var context:Context3D = Starling.context;
+				program = context.createProgram();
 				program.upload(vertexShaderJS as ByteArray, fragmentShaderJS as ByteArray); 
 			}
 			else
