@@ -138,7 +138,9 @@ package starling.text
                 var bitmapChar:BitmapChar = new BitmapChar(id, texture, xOffset, yOffset, xAdvance); 
                 addChar(id, bitmapChar);
             }
-            
+// RANDORI CHANGES: Added check here for cases where kernings is not defined			
+			if (fontXml.kernings == undefined)
+				return;
             for each (var kerningElement:XML in fontXml.kernings.kerning)
             {
                 var first:int = parseInt(kerningElement.attribute("first"));

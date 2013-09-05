@@ -95,10 +95,12 @@ package starling.animation
             mRoundToInt = mReverse = false;
             mRepeatCount = 1;
             mCurrentCycle = -1;
-            
-            if (transition is String)
-                this.transition = transition as String;
-            else if (transition is Function)
+			
+// RANDORI BUG WORKAROUND: "is" turns into instance of which just doesn't work
+// RANDORI CHANGES: adding 2nd arg
+			if (transition is String || typeof transition === "string")
+				this.transition = transition as String;
+			else if (transition is Function || typeof transition === "function")
                 this.transitionFunc = transition as Function;
             else 
                 throw new ArgumentError("Transition must be either a string or a function");
