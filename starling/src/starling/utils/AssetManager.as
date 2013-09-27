@@ -688,6 +688,7 @@ package starling.utils
 		}
 		public function process(asset:Object, rawAsset:Class):void
 		{
+			var name:String = assetName;
 			var texture:Texture;
 			var bytes:ByteArray;
 			
@@ -759,7 +760,7 @@ package starling.utils
 				}
 				else if (byteArrayStartsWith(bytes, "<"))
 				{
-					process(new XML(bytes));
+					process(new XML(bytes), null);
 					bytes.clear();
 				}
 				else
@@ -800,7 +801,7 @@ package starling.utils
 			var urlLoader:URLLoader = event.target as URLLoader;
 			urlLoader.data.clear();
 			event.target.removeEventListener(Event.COMPLETE, onLoaderComplete);
-			onComplete(event.target.content);
+			onComplete((event.target as Object).content);
 		}
         
         // helpers
