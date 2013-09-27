@@ -23,6 +23,7 @@ package
         private var mLoadingProgress:ProgressBar;
         private var mMainMenu:MainMenu;
         private var mCurrentScene:Scene;
+        private var _container:Sprite;
         
         private static var sAssets:AssetManager;
         

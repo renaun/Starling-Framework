@@ -1,11 +1,9 @@
 Starling: Changelog
 ===================
 
-version 1.4 RC - 2013-08-19
----------------------------
+version 1.4 - 2013-09-23
+------------------------
 
-- optimized rendering / buffer upload speed by using ByteArrays instead of Vectors in VertexData.
-  Heads-up: this changes the public interface - update your custom render methods!
 - added 'Sprite.clipRect' property for simple rectangular masking (thanks to Tim Conkling)
 - added 'DisplacementMapFilter'
 - added support for 'HiDPI' (i.e. retina MacBooks)
@@ -24,6 +22,8 @@ version 1.4 RC - 2013-08-19
 - added 'Tween.getProgress()'
 - added 'Quad.premultipliedAlpha' (for consistency)
 - added 'AssetManager.checkPolicyFile'
+- added 'AssetManager.purgeQueue()' method: empties the queue & stops all pending load operations
+- added Event.TEXTURES_RESTORED, dispatched by AssetManager after context loss
 - added 'TextField.redraw()' method to force immediate drawing of contents
 - added 'DisplayObject.alignPivot()' for simple object alignment
 - added optional 'id' paramter to 'TouchEvent.getTouch()' method
@@ -33,10 +33,13 @@ version 1.4 RC - 2013-08-19
 - added 'Texture.adjustTexCoords()' method
 - added support for all new Stage3D texture formats (including runtime compression on Desktop)
 - added support for custom TouchProcessors (thanks to Tim Conkling)
+- added 'suspendRendering' argument to 'Starling.stop()' method (for AIR 3.9 background execution)
+- added more vertex & quad manipulation methods to QuadBatch
+- optimized broadcast of ENTER_FRAME event
+- optimized rendering by doing copy-transform simultaneously
+- optimized 'DisplayObject.transformationMatrix' calculations (thanks to Ville Koskela)
 - optimized hidden object allocations on iOS (thanks to Nisse Bryngfors & Adobe Scout)
 - optimized handling of texture recreation in case of a context loss (requires much less memory)
-- optimized broadcast of ENTER_FRAME event
-- optimized 'DisplayObject.transformationMatrix' calculations (thanks to Ville Koskela)
 - optimized usage of QuadBatches used during rendering (now trimming them)
 - optimized 'Button' by removing TextField when text is empty String
 - optimized 'DisplayObjectContainer.setChildIndex()' (thanks to Josh Tynjala)
@@ -46,6 +49,8 @@ version 1.4 RC - 2013-08-19
 - updated the region a filter draws into (now limited to object bounds + margin)
 - updated bitmap font registration to be case insensitive
 - updated AssetManager to use texture file name as name for bitmap font
+- updated QuadBatch: 'QuadBatch.mVertexData' is now protected, analog to 'Quad'
+- updated Ant build-file to include ASDoc data in starling SWC
 - fixed multitouch support on devices with both mouse and touch screen
 - fixed that AssetManager sometimes never finished loading the queue
 - fixed 'MovieClip.totalTime' calculations to avoid floating point errors
@@ -61,6 +66,9 @@ version 1.4 RC - 2013-08-19
 - fixed recursion error when applying filter on flattened object
 - fixed dispatching of ADDED events when child was re-added to the same parent
 - fixed missing HOVER event after ended Touches (caused hand-cursor to appear only after movement)
+- fixed that clipping rectangle sometimes did not intersect framebuffer, leading to an error
+- fixed TextField errors when the TextField-area was empty
+- fixed UTF-8/16/32 recognition in AssetManager
 
 version 1.3 - 2013-01-14
 ------------------------

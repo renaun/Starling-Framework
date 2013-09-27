@@ -54,15 +54,18 @@ package starling.events
         private var mRoot:DisplayObject;
         private var mElapsedTime:Number;
         private var mTouchMarker:TouchMarker;
-        
-        private var mCurrentTouches:Vector.<Touch>;
-        private var mQueue:Vector.<Array>;
         private var mLastTaps:Vector.<Touch>;
-        
         private var mShiftDown:Boolean = false;
         private var mCtrlDown:Boolean  = false;
         private var mMultitapTime:Number = 0.3;
         private var mMultitapDistance:Number = 25;
+        
+        /** A vector of arrays with the arguments that were passed to the "enqueue"
+         *  method (the oldest being at the end of the vector). */
+        protected var mQueue:Vector.<Array>;
+        
+        /** The list of all currently active touches. */
+        protected var mCurrentTouches:Vector.<Touch>;
         
         /** Helper objects. */
         private static var sUpdatedTouches:Vector.<Touch> = new <Touch>[];
@@ -155,7 +158,7 @@ package starling.events
             
             // the same touch event will be dispatched to all targets;
             // the 'dispatch' method will make sure each bubble target is visited only once.
-            var touchEvent:TouchEvent = new TouchEvent(TouchEvent.TOUCH, touches, shiftDown, ctrlDown);
+            var touchEvent:TouchEvent = new TouchEvent(TouchEvent.TOUCH, mCurrentTouches, shiftDown, ctrlDown);
             var touch:Touch;
             
             // hit test our updated touches
@@ -205,7 +208,7 @@ package starling.events
          *  
          *  <p>On OS X, we get mouse events from outside the stage; on Windows, we do not.
          *  This method enqueues an artificial hover point that is just outside the stage.
-         *  That way, objects listening for HOVERs over them will get notified everywhere.
+         *  That way, objects listening for HOVERs over them will get notified everywhere.</p>
          */
         public function enqueueMouseLeftStage():void
         {
@@ -352,13 +355,6 @@ package starling.events
         
         /** The stage object to which the touch objects are (per default) dispatched. */
         public function get stage():Stage { return mStage; }
-        
-        /** A vector of arrays with the arguments that were passed to the "enqueue"
-         *  method (the oldest being at the end of the vector). */
-        protected function get queue():Vector.<Array> { return mQueue; }
-        
-        /** The list of all currently active touches. */
-        protected function get currentTouches():Vector.<Touch> { return mCurrentTouches; }
         
         // keyboard handling
         
